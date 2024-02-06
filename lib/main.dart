@@ -1,27 +1,40 @@
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
 import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:newproject2/constants.dart';
 import 'package:newproject2/custom_theme.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class Student {
-  late String career;
-  late String campusId;
-  late String name;
-  late double cgpa;
+  String campusId;
+  String name;
+  double cgpa;
+  String show;
+  String? hostel;
+  String? room;
 
-  Student(
-      {required this.career,
-      required this.campusId,
-      required this.name,
-      required this.cgpa});
+  Student({
+    required this.campusId,
+    required this.name,
+    required this.cgpa,
+    required this.show,
+    this.hostel,
+    this.room,
+  });
 
-  factory Student.fromJson(Map<String, dynamic> json) {
+  factory Student.fromJson(String campusId, Map<String, dynamic> json) {
     return Student(
-      career: json['career'],
-      campusId: json['campus id'],
+      campusId: campusId,
       name: json['name'],
       cgpa: json['cgpa'].toDouble(),
+      show: json['show'].toString(),
     );
+  }
+  void updateHostelRoom(String hostel, String room) {
+    this.hostel = hostel;
+    this.room = room;
   }
 }
 
@@ -33,10 +46,9 @@ class CardList extends StatefulWidget {
 }
 
 class _CardListState extends State<CardList> {
-  // final List<String> data = List.generate(20, (index) => "Item $index");
-
   late List<Student> students;
   late List<Student> filteredStudents;
+
   late TextEditingController searchController;
   Set<int> selectedYearFilters = {};
   Set<String> selectedDegreeFilters = {};
@@ -50,18 +62,29 @@ class _CardListState extends State<CardList> {
     searchController = TextEditingController();
   }
 
-  Future<String> fetchData() async {
-    var response = await http.get(Uri.parse(
-        "https://script.googleusercontent.com/macros/echo?user_content_key=9oFG5-nbsQR89eE4r5n5oogZmhqrxWce9qLCx9kD_l7zIWhdy-SgQo1xFkaQc_H1iewpkJdnafuawHzYwwIoBub4LUpYmCU7m5_BxDlH2jW0nuo2oDemN9CCS2h10ox_1xSncGQajx_ryfhECjZEnJF0XyafF5tCPRJG45TClwuphImSJmzD2_KmerKfvH_c3VfAPYIocs39om-Z7p-vrsGbdeN7LRIMcubGlWg0vJgJpe0J070fvw&lib=MSEyvIiv8YNtrN875YbmWHqR0-IiIPqXW"));
+  Future<List> fetchData() async {
+    var response = await http.get(Uri.parse(everyone));
+    var response2 = await http.get(Uri.parse(hosteldata));
 
     setState(() {
-      var extractdata = json.decode(response.body);
-      var tempList = extractdata['data'] as List;
-      students = tempList.map((json) => Student.fromJson(json)).toList();
+      final Map<String, dynamic> data = json.decode(response.body)['data'];
+      final Map<String, dynamic> data2 = json.decode(response2.body);
+
+      data.forEach((campusId, studentData) {
+        students.add(Student.fromJson(campusId, studentData));
+      });
+      for (var student in students) {
+        if (data2.containsKey(student.campusId)) {
+          student.updateHostelRoom(data2[student.campusId]['hostel'],
+              data2[student.campusId]['room'] ?? 'NA');
+        } else {
+          student.updateHostelRoom('', '');
+        }
+      }
       filteredStudents = students;
     });
 
-    return "Success!";
+    return filteredStudents;
   }
 
   void search(String query) {
@@ -85,10 +108,24 @@ class _CardListState extends State<CardList> {
                           .toString()
                           .substring(4, 8)
                           .contains(code))) &&
-              (student.name.toLowerCase().contains(query.toLowerCase()) ||
-                  student.campusId.toString().contains(query)))
+              (namesearch(query, student) ||
+                  student.campusId.toLowerCase().contains(query.toLowerCase())))
           .toList();
     });
+  }
+
+  bool namesearch(String query, Student student) {
+    List<String> keywords = query.split(' ');
+    bool matchall = true;
+    for (String keyword in keywords) {
+      if (!student.name.toLowerCase().contains(keyword.toLowerCase())) {
+        matchall = false;
+        break;
+      } else {
+        matchall = true;
+      }
+    }
+    return matchall;
   }
 
   void clear() {
@@ -110,6 +147,7 @@ class _CardListState extends State<CardList> {
   @override
   Widget build(BuildContext context) {
     int totalFilteredStudents = filteredStudents.length;
+
     return Scaffold(
       backgroundColor: CustomTheme.darkScaffoldColor,
       appBar: AppBar(
@@ -129,6 +167,11 @@ class _CardListState extends State<CardList> {
             child: TextField(
               controller: searchController,
               onChanged: search,
+              cursorColor: Colors.white,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(50),
@@ -144,7 +187,7 @@ class _CardListState extends State<CardList> {
                     width: 3,
                   ),
                 ),
-                labelText: 'Search by name',
+                labelText: 'Search',
                 labelStyle: const TextStyle(
                   color: Colors.white,
                 ),
@@ -167,96 +210,262 @@ class _CardListState extends State<CardList> {
                       color: Colors.white,
                       onPressed: () {
                         showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              title: Text(
-                                'Filters',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              content: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  ToggleButtons(
-                                    children: [
-                                      Text('2022'),
-                                      Text('2023'),
-                                      Text('2021'),
-                                      Text('2020'),
-                                      Text('2019'),
-                                      Text('2018'),
+                            context: context,
+                            builder: (BuildContext ctx) => StatefulBuilder(
+                                  builder: (context, setState) => AlertDialog(
+                                    scrollable: true,
+                                    backgroundColor:
+                                        CustomTheme.darkPrimaryColorVariant,
+                                    title: Text(
+                                      'Filters',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    actions: <Widget>[
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          ToggleButtons(
+                                            borderColor: Colors.white,
+                                            selectedColor:
+                                                Color(Colors.white.value),
+                                            isSelected:
+                                                List.generate(6, (index) {
+                                              return selectedYearFilters
+                                                  .contains([
+                                                2023,
+                                                2022,
+                                                2021,
+                                                2020,
+                                                2019,
+                                                2018
+                                              ][index]);
+                                            }),
+                                            onPressed: (index) => setState(() {
+                                              final year = [
+                                                2023,
+                                                2022,
+                                                2021,
+                                                2020,
+                                                2019,
+                                                2018
+                                              ][index];
+                                              if (selectedYearFilters
+                                                  .contains(year)) {
+                                                selectedYearFilters
+                                                    .remove(year);
+                                              } else {
+                                                selectedYearFilters.add(year);
+                                              }
+                                              applyFilters();
+                                              clearsearch();
+                                            }),
+                                            fillColor:
+                                                CustomTheme.darkSecondaryColor,
+                                            children: [
+                                              Text(
+                                                '2023',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                '2022',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                '2021',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                '2020',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                '2019',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                '2018',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          ToggleButtons(
+                                            borderColor: Colors.white,
+                                            isSelected: List.generate(
+                                                6,
+                                                (index) => selectedDegreeFilters
+                                                        .contains([
+                                                      'A1',
+                                                      'A3',
+                                                      'A4',
+                                                      'A7',
+                                                      'A8',
+                                                      'AA',
+                                                    ][index])),
+                                            onPressed: (index) => setState(() {
+                                              final degreeCodes = [
+                                                'A1',
+                                                'A3',
+                                                'A4',
+                                                'A7',
+                                                'A8',
+                                                'AA',
+                                              ];
+                                              final degreeCode =
+                                                  degreeCodes[index];
+                                              if (selectedDegreeFilters
+                                                  .contains(degreeCode)) {
+                                                selectedDegreeFilters
+                                                    .remove(degreeCode);
+                                              } else {
+                                                selectedDegreeFilters
+                                                    .add(degreeCode);
+                                              }
+
+                                              applyFilters();
+                                              clearsearch();
+                                            }),
+                                            children: [
+                                              Text(
+                                                'B.E. Chem.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'B.E. E.E.E.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'B.E. Mech.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'B.E. C.S.E.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'B.E. E.N.I.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'B.E. E.C.E',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          ToggleButtons(
+                                            borderColor: Colors.white,
+                                            isSelected: List.generate(
+                                                5,
+                                                (index) =>
+                                                    selectedDegreeFilters2
+                                                        .contains([
+                                                      'B1',
+                                                      'B2',
+                                                      'B3',
+                                                      'B4',
+                                                      'B5'
+                                                    ][index])),
+                                            onPressed: (index) => setState(() {
+                                              final degreeCodes = [
+                                                'B1',
+                                                'B2',
+                                                'B3',
+                                                'B4',
+                                                'B5'
+                                              ];
+                                              final degreeCode =
+                                                  degreeCodes[index];
+                                              if (selectedDegreeFilters2
+                                                  .contains(degreeCode)) {
+                                                selectedDegreeFilters2
+                                                    .remove(degreeCode);
+                                              } else {
+                                                selectedDegreeFilters2
+                                                    .add(degreeCode);
+                                              }
+
+                                              applyFilters();
+                                            }),
+                                            children: [
+                                              Text(
+                                                'M.Sc. Bio.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'M.Sc. Chem.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'M.Sc. Eco.',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'M.Sc. Math',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                              Text(
+                                                'M.Sc. Physics',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            children: [
+                                              ElevatedButton(
+                                                onPressed: () => setState(() {
+                                                  searchController.clear();
+                                                  selectedYearFilters.clear();
+                                                  selectedDegreeFilters.clear();
+                                                  selectedDegreeFilters2
+                                                      .clear();
+                                                  filteredStudents = students;
+                                                }),
+                                                child: Text('Clear Filters'),
+                                              ),
+                                              SizedBox(
+                                                width: 100,
+                                              ),
+                                              ElevatedButton(
+                                                onPressed:
+                                                    Navigator.of(context).pop,
+                                                child: Text('Apply Filters'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ],
-                                    isSelected: List.generate(
-                                        6,
-                                        (index) => selectedYearFilters.contains(
-                                                [
-                                              2022,
-                                              2023,
-                                              2021,
-                                              2020,
-                                              2019,
-                                              2018
-                                            ][index])),
-                                    onPressed: (index) =>
-                                        toggleYearFilter(index),
                                   ),
-                                  ToggleButtons(
-                                    children: [
-                                      Text('A1'),
-                                      Text('A3'),
-                                      Text('A4'),
-                                      Text('A7'),
-                                      Text('A8'),
-                                      Text('AA'),
-                                    ],
-                                    isSelected: List.generate(
-                                        6,
-                                        (index) =>
-                                            selectedDegreeFilters.contains([
-                                              'A1',
-                                              'A3',
-                                              'A4',
-                                              'A7',
-                                              'A8',
-                                              'AA',
-                                            ][index])),
-                                    onPressed: (index) =>
-                                        toggleDegreeFilter(index),
-                                  ),
-                                  ToggleButtons(
-                                    children: [
-                                      Text('B1'),
-                                      Text('B2'),
-                                      Text('B3'),
-                                      Text('B4'),
-                                      Text('B5'),
-                                    ],
-                                    isSelected: List.generate(
-                                        5,
-                                        (index) =>
-                                            selectedDegreeFilters2.contains([
-                                              'B1',
-                                              'B2',
-                                              'B3',
-                                              'B4',
-                                              'B5'
-                                            ][index])),
-                                    onPressed: (index) =>
-                                        toggleDegreeFilter2(index),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: clear,
-                                    child: Text('Clear Filters'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
+                                ));
                       },
                     ),
                     const Text(
@@ -268,6 +477,22 @@ class _CardListState extends State<CardList> {
                     ),
                   ],
                 ),
+                ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: CustomTheme.darkPrimaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        putrequest();
+                      });
+                    },
+                    child: Text(
+                      'Hide your CGPA',
+                      style: TextStyle(color: Colors.white),
+                    )),
                 Text(
                   'RESULTS: $totalFilteredStudents',
                   style: const TextStyle(
@@ -285,53 +510,150 @@ class _CardListState extends State<CardList> {
                 return Card(
                   margin:
                       const EdgeInsets.symmetric(vertical: 15, horizontal: 12),
-                  shape: const RoundedRectangleBorder(
-                    side: BorderSide(
-                        color: CustomTheme.darkSecondaryColor, width: 3),
-                    borderRadius: BorderRadius.zero,
+                  shape: RoundedRectangleBorder(
+                    side: BorderSide(color: Color(0xFFBDBDBD), width: 0.5),
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   elevation: 10,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: CustomTheme.darkPrimaryColorVariant,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(0),
-                        topRight: Radius.circular(0),
-                        bottomLeft: Radius.circular(13),
-                        bottomRight: Radius.circular(0),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: CustomTheme.darkSecondaryColor,
-                          offset: Offset(0, 7.5),
+                  child: Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: CustomTheme.darkScaffoldColor,
+                          borderRadius: BorderRadius.circular(6),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: CustomTheme.darkSecondaryColor,
+                              offset: Offset(2.5, 2.5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 16),
-                      title: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            filteredStudents[index].name,
+                        child: ListTile(
+                          contentPadding:
+                              const EdgeInsets.fromLTRB(20, 0, 0, 0),
+                          title: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${filteredStudents[index].name}',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(30, 0, 0, 0),
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      height: 58,
+                                      width: 58,
+                                      decoration: BoxDecoration(
+                                        color: CustomTheme.darkScaffoldColor,
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(width: 3),
+                                      ),
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color:
+                                                CustomTheme.darkSecondaryColor,
+                                            width: 3, // Border width
+                                          ),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 1,
+                                                      vertical: 1),
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 0),
+                                                decoration: BoxDecoration(
+                                                  color: CustomTheme
+                                                      .darkSecondaryColor,
+                                                  borderRadius:
+                                                      BorderRadius.circular(5),
+                                                ),
+                                                child: const Text(
+                                                  'CGPA',
+                                                  style: TextStyle(
+                                                    fontSize: 10,
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            if (filteredStudents[index].show ==
+                                                'true')
+                                              Text(
+                                                '${filteredStudents[index].cgpa}',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          subtitle: Row(
+                            children: [
+                              _buildTag(filteredStudents[index].campusId),
+                              _buildTag(codetobranch[filteredStudents[index]
+                                  .campusId
+                                  .substring(4, 6)]),
+                              if (filteredStudents[index]
+                                      .campusId
+                                      .substring(6, 7) ==
+                                  'A')
+                                _buildTag(codetobranch[filteredStudents[index]
+                                    .campusId
+                                    .substring(6, 8)]),
+                            ],
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: CustomTheme.darkSecondaryColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${filteredStudents[index].hostel} - ${filteredStudents[index].room}',
                             style: TextStyle(
-                              fontSize: 25,
-                              color: Colors.white,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                      subtitle: Row(
-                        children: [
-                          _buildTag('${filteredStudents[index].campusId}'),
-                          _buildTag('${filteredStudents[index].cgpa}'),
-                          _buildTag('ijkl'),
-                          _buildTag('mnop'),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 );
               },
@@ -347,11 +669,11 @@ class _CardListState extends State<CardList> {
       margin: const EdgeInsets.only(right: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: CustomTheme.darkPrimaryColorVariant,
-        borderRadius: BorderRadius.circular(0),
+        color: CustomTheme.darkScaffoldColor,
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: Colors.white, // Change to your desired border color
-          width: 2,
+          color: const Color(0xFFBDBDBD),
+          width: 0.1,
         ),
       ),
       child: Text(
@@ -366,7 +688,7 @@ class _CardListState extends State<CardList> {
 
   void toggleYearFilter(int index) {
     setState(() {
-      final year = [2022, 2023, 2021, 2020, 2019, 2018][index];
+      final year = [2023, 2022, 2021, 2020, 2019, 2018][index];
       if (selectedYearFilters.contains(year)) {
         selectedYearFilters.remove(year);
       } else {
@@ -438,11 +760,41 @@ class _CardListState extends State<CardList> {
           .toList();
     });
   }
+
+  Future<http.Response> putrequest() async {
+    final response = await http.put(Uri.parse(hide),
+        headers: <String, String>{
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(<String, String>{
+          "campus_id": "2022B4AA0950G",
+        }));
+    Phoenix.rebirth(context);
+    print(response.body);
+
+    return response;
+  }
+
+  Map codetobranch = {
+    "A1": "Chemical",
+    "A3": "E.E.E.",
+    "A4": "Mechanical",
+    "A7": "C.S.E.",
+    "A8": "E.N.I.",
+    "AA": "E.C.E.",
+    "B1": "M.Sc. Bio.",
+    "B2": "M.Sc. Chem.",
+    "B3": "M.Sc. Eco.",
+    "B4": "M.Sc. Math",
+    "B5": "M.Sc. Physics",
+  };
 }
 
 void main() {
-  runApp(const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: CardList(),
+  runApp(Phoenix(
+    child: const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: CardList(),
+    ),
   ));
 }
