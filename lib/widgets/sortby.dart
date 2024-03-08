@@ -39,8 +39,12 @@ class _SortDropdownButtonState extends State<SortDropdownButton> {
         }
         widget.onSort?.call();
       },
-      items: <String>['Sort', 'Sort by CGPA', 'Sort by Name', 'Sort by Hostel']
-          .map<DropdownMenuItem<String>>((String value) {
+      items: <String>[
+        'Sort',
+        'Sort by CGPA',
+        'Sort by Name',
+        'Sort by Room No.'
+      ].map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
@@ -68,11 +72,13 @@ class _SortDropdownButtonState extends State<SortDropdownButton> {
   void sortcgpa() {
     setState(() {
       widget.students.sort((b, a) {
-        if (a.show == 'true' && b.show == 'true') {
-          return a.cgpa.compareTo(b.cgpa);
-        } else {
-          return 0;
+        if (a.show == 'true' && b.show == 'false') {
+          return 1;
+        } else if (a.show == 'false' && b.show == 'true') {
+          return -1;
         }
+
+        return a.cgpa.compareTo(b.cgpa);
       });
     });
   }

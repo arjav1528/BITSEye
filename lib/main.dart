@@ -2,13 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'screens/list.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 
 void main() {
-  runApp(Phoenix(
-    child: MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: CardList(),
-    ),
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: CardList(),
   ));
 }

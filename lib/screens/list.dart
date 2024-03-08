@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:newproject2/custom_theme.dart';
 import 'dart:convert';
 import 'package:newproject2/models/student.dart';
@@ -9,7 +8,8 @@ import 'package:newproject2/services/search.dart';
 import 'package:newproject2/widgets/sortby.dart';
 import 'package:newproject2/widgets/tag.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:html' as html;
+import 'package:universal_html/html.dart' as html;
+// import 'package:toggle_switch/toggle_switch.dart';
 
 class CardList extends StatefulWidget {
   const CardList({super.key});
@@ -124,7 +124,12 @@ class _CardListState extends State<CardList> {
   //     filteredStudents = students;
   //   });
   // }
-
+  int yearindex = 0;
+  int beindex = 0;
+  int mscindex = 0;
+  int ahindex = 0;
+  int chindex = 0;
+  int dhindex = 0;
   @override
   Widget build(BuildContext context) {
     var uri = Uri.parse(html.window.location.href);
@@ -726,14 +731,18 @@ class _CardListState extends State<CardList> {
                                                   filteredStudents = students;
                                                   clear();
                                                 }),
-                                                child:
-                                                    const Text('Clear Filters'),
+                                                child: Text(
+                                                  'Clear Filters',
+                                                  style: GoogleFonts.jost(
+                                                      color: Colors.black),
+                                                ),
                                               ),
                                               ElevatedButton(
                                                 onPressed:
                                                     Navigator.of(context).pop,
-                                                child:
-                                                    const Text('Apply Filters'),
+                                                child: Text('Apply Filters',
+                                                    style: GoogleFonts.jost(
+                                                        color: Colors.black)),
                                               ),
                                             ],
                                           ),
@@ -754,7 +763,7 @@ class _CardListState extends State<CardList> {
                         onPressed: () {
                           setState(() {
                             Hide().putrequest(paramValue!);
-                            Phoenix.rebirth(context);
+                            html.window.location.reload();
                           });
                         },
                         child: Text(
@@ -992,6 +1001,11 @@ class _CardListState extends State<CardList> {
                       selectedDegreeFilters
                           .any((code) => student.campusId.toString().substring(4, 8).contains(code))))
           .toList();
+      SortDropdownButton(
+          students: filteredStudents,
+          onSort: () {
+            setState(() {});
+          });
     });
   }
 }
