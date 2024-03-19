@@ -34,7 +34,7 @@ class _SortDropdownButtonState extends State<SortDropdownButton> {
           sortcgpa();
         } else if (newValue == 'Sort by Name') {
           sortname();
-        } else if (newValue == 'Sort by Hostel') {
+        } else if (newValue == 'Sort by Room No.') {
           sorthostel();
         }
         widget.onSort?.call();

@@ -145,7 +145,7 @@ class _CardListState extends State<CardList> {
       appBar: AppBar(
         backgroundColor: CustomTheme.darkScaffoldColor,
         title: Text(
-          'BPGC EVERYONE',
+          'BITSEye',
           style: GoogleFonts.jost(
             color: Colors.white,
             fontWeight: FontWeight.bold,
