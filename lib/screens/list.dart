@@ -761,8 +761,8 @@ class _CardListState extends State<CardList> {
                           ),
                         ),
                         onPressed: () {
-                          setState(() {
-                            Hide().putrequest(paramValue!);
+                          setState(() async {
+                            await Hide().putrequest(paramValue!);
                             html.window.location.reload();
                           });
                         },
