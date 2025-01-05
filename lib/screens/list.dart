@@ -35,6 +35,7 @@ class _CardListState extends State<CardList> {
     "A7": "C.S.E.",
     "A8": "E.N.I.",
     "AA": "E.C.E.",
+    "AD": "MnC",
     "B1": "M.Sc. Bio.",
     "B2": "M.Sc. Chem.",
     "B3": "M.Sc. Eco.",
@@ -265,8 +266,9 @@ class _CardListState extends State<CardList> {
                                               Wrap(
                                                 spacing: 10.0,
                                                 children:
-                                                    List.generate(6, (index) {
+                                                    List.generate(7, (index) {
                                                   final year = [
+                                                    2024,
                                                     2023,
                                                     2022,
                                                     2021,
@@ -345,14 +347,15 @@ class _CardListState extends State<CardList> {
                                               Wrap(
                                                 spacing: 10.0,
                                                 children:
-                                                    List.generate(6, (index) {
+                                                    List.generate(7, (index) {
                                                   final degreeCodes = [
                                                     'A1',
                                                     'A3',
                                                     'A4',
                                                     'A7',
                                                     'A8',
-                                                    'AA'
+                                                    'AA',
+                                                    'AD',
                                                   ];
                                                   final degreeCode =
                                                       degreeCodes[index];
@@ -937,7 +940,7 @@ class _CardListState extends State<CardList> {
                                         text: codetobranch[
                                             filteredStudents[index]
                                                 .campusId
-                                                .substring(6, 8)]),
+                                                .substring(6, 8).toString()]),
                                 ],
                               ),
                             ],

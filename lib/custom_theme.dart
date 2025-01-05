@@ -11,66 +11,66 @@ class CustomTheme {
   static const Color darkOutlineColor = Color(0xFF3D3D3D);
 
   static const TextTheme darkTextTheme = TextTheme(
-    headline1: TextStyle(
+    displayLarge: TextStyle(
       color: Color(0xFFCECECE),
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 30,
     ),
-    headline2: TextStyle(
+    displayMedium: TextStyle(
       color: Color(0xFFCECECE),
       fontFamily: "Jost",
       fontWeight: FontWeight.w400,
       fontSize: 20,
     ),
-    headline3: TextStyle(
+    displaySmall: TextStyle(
       color: darkSecondaryColor,
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 20,
     ),
-    headline4: TextStyle(
+    headlineMedium: TextStyle(
       color: Color(0xFFC9C9C9),
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 18,
     ),
-    headline5: TextStyle(
+    headlineSmall: TextStyle(
       color: darkSecondaryColor,
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 16,
     ),
-    caption: TextStyle(
+    bodySmall: TextStyle(
       color: Color(0xFFC9C9C9),
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 11,
     ),
-    overline: TextStyle(
+    labelSmall: TextStyle(
       color: Color(0xFFC9C9C9),
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
       fontSize: 11,
     ),
-    bodyText1: TextStyle(
+    bodyLarge: TextStyle(
       fontFamily: "Jost",
       fontSize: 13,
       fontWeight: FontWeight.w400,
       color: Colors.white,
     ),
-    bodyText2: TextStyle(
+    bodyMedium: TextStyle(
       fontFamily: "Rufina-Regular",
       fontSize: 11,
       color: Colors.white,
     ),
-    subtitle1: TextStyle(
+    titleMedium: TextStyle(
       fontFamily: "Jost",
       fontSize: 14,
       color: Colors.white,
       decoration: TextDecoration.underline,
     ),
-    button: TextStyle(
+    labelLarge: TextStyle(
       color: Color(0xFFC9C9C9),
       fontFamily: "Jost",
       fontWeight: FontWeight.w500,
